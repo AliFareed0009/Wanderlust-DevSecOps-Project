@@ -12,8 +12,6 @@ WanderLust is a simple MERN travel blog website ✈ This project is aimed to hel
 ### <mark>Project Deployment Flow:</mark>
 <img src="https://github.com/DevMadhup/Wanderlust-Mega-Project/blob/main/Assets/DevSecOps%2BGitOps.gif" />
 
-#
-
 ## Tech stack used in this project:
 - GitHub (Code)
 - Docker (Containerization)
@@ -45,7 +43,6 @@ WanderLust is a simple MERN travel blog website ✈ This project is aimed to hel
 | Jenkins Master | <a href="#Jenkins">Install and configure Jenkins</a>     |
 | eksctl | <a href="#EKS">Install eksctl</a>     |
 | Argocd | <a href="#Argo">Install and configure ArgoCD</a>     |
-| Jenkins-Worker Setup | <a href="#Jenkins-worker">Install and configure Jenkins Worker Node</a>     |
 | OWASP setup | <a href="#Owasp">Install and configure OWASP</a>     |
 | SonarQube | <a href="#Sonar">Install and configure SonarQube</a>     |
 | Email Notification Setup | <a href="#Mail">Email notification setup</a>     |
@@ -57,11 +54,11 @@ WanderLust is a simple MERN travel blog website ✈ This project is aimed to hel
 #
 
 > [!Note]
-> This project will be implemented on North California region (us-west-1).
+> This project will be implemented on Ohio region (us-west-1).
 
 - <b>Create 1 Master machine on AWS with 2CPU, 8GB of RAM (t2.large) and 29 GB of storage and install Docker on it.</b>
 #
-- <b>Open the below ports in security group of master machine and also attach same security group to Jenkins worker node (We will create worker node shortly)</b>
+- <b>Open the below ports in security group of master machine</b>
 ![image](https://github.com/user-attachments/assets/4e5ecd37-fe2e-4e4b-a6ba-14c7b62715a3)
 
 > [!Note]
@@ -149,66 +146,15 @@ sudo apt-get install jenkins -y
   ```
 > [!Note]
 >  Make sure the ssh-public-key "eks-nodegroup-key is available in your aws account"
-#
-- <b id="Jenkins-worker">Setting up jenkins worker node</b>
-  - Create a new EC2 instance (Jenkins Worker) with 2CPU, 8GB of RAM (t2.large) and 29 GB of storage and install java on it
-  ```bash
-  sudo apt update -y
-  sudo apt install fontconfig openjdk-17-jre -y
-  ```
-  - Create an IAM role with <mark>administrator access</mark> attach it to the jenkins worker node <mark>Select Jenkins worker node EC2 instance --> Actions --> Security --> Modify IAM role</mark>
-  ![image](https://github.com/user-attachments/assets/1a9060db-db11-40b7-86f0-47a65e8ed68b)
 
-  - Configure AWSCLI (<a href="https://github.com/DevMadhup/DevOps-Tools-Installations/blob/main/AWSCLI/AWSCLI.sh">Setup AWSCLI</a>)
-  ```bash
-  sudo su
-  ```
-  ```bash
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  sudo apt install unzip
-  unzip awscliv2.zip
-  sudo ./aws/install
-  aws configure
-  ```
-#
-  - <b>generate ssh keys (Master machine) to setup jenkins master-slave</b>
-  ```bash
-  ssh-keygen
-  ```
-  ![image](https://github.com/user-attachments/assets/0c8ecb74-1bc5-46f9-ad55-1e22e8092198)
-#
-  - <b>Now move to directory where your ssh keys are generated and copy the content of public key and paste to authorized_keys file of the Jenkins worker node.</b>
-#
-  - <b>Now, go to the jenkins master and navigate to <mark>Manage jenkins --> Nodes</mark>, and click on Add node </b>
-    - <b>name:</b> Node
-    - <b>type:</b> permanent agent
-    - <b>Number of executors:</b> 2
-    - Remote root directory
-    - <b>Labels:</b> Node
-    - <b>Usage:</b> Only build jobs with label expressions matching this node
-    - <b>Launch method:</b> Via ssh
-    - <b>Host:</b> \<public-ip-worker-jenkins\>
-    - <b>Credentials:</b> <mark>Add --> Kind: ssh username with private key --> ID: Worker --> Description: Worker --> Username: root --> Private key: Enter directly --> Add Private key</mark>
-    - <b>Host Key Verification Strategy:</b> Non verifying Verification Strategy
-    - <b>Availability:</b> Keep this agent online as much as possible
-#
-  - And your jenkins worker node is added
-  ![image](https://github.com/user-attachments/assets/cab93696-a4e2-4501-b164-8287d7077eef)
 
-# 
-- <b id="docker">Install docker (Jenkins Worker)</b>
-
-```bash
-sudo apt install docker.io -y
-sudo usermod -aG docker ubuntu && newgrp docker
-```
 #
 - <b id="Sonar">Install and configure SonarQube (Master machine)</b>
 ```bash
 docker run -itd --name SonarQube-Server -p 9000:9000 sonarqube:lts-community
 ```
 #
-- <b id="Trivy">Install Trivy (Jenkins Worker)</b>
+- <b id="Trivy">Install Trivy (Master machine)</b>
 ```bash
 sudo apt-get install wget apt-transport-https gnupg lsb-release -y
 wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
@@ -304,10 +250,10 @@ sudo apt-get install trivy -y
   - Docker
   - Pipeline: Stage View
 #
-- <b id="Owasp">Configure OWASP, move to <mark>Manage Jenkins --> Plugins --> Available plugins</mark> (Jenkins Worker)</b>
+- <b id="Owasp">Configure OWASP, move to <mark>Manage Jenkins --> Plugins --> Available plugins</mark> (Master machine)</b>
 ![image](https://github.com/user-attachments/assets/da6a26d3-f742-4ea8-86b7-107b1650a7c2)
 
-- <b id="Sonar">After OWASP plugin is installed, Now move to <mark>Manage jenkins --> Tools</mark> (Jenkins Worker)</b>
+- <b id="Sonar">After OWASP plugin is installed, Now move to <mark>Manage jenkins --> Tools</mark> (Master machine)</b>
 ![image](https://github.com/user-attachments/assets/3b8c3f20-202e-4864-b3b6-b48d7a604ee8)
 #
 - <b>Login to SonarQube server and create the credentials for jenkins to integrate with SonarQube</b>
@@ -354,7 +300,7 @@ sudo apt-get install trivy -y
 ![image](https://github.com/user-attachments/assets/ac79f7e6-c02c-4431-bb3b-5c7489a93a63)
 ![image](https://github.com/user-attachments/assets/46a5937f-e06e-4265-ac0f-42543576a5cd)
 #
-- <b>Provide permission to docker socket so that docker build and push command do not fail (Jenkins Worker)</b>
+- <b>Provide permission to docker socket so that docker build and push command do not fail (Master machine)</b>
 ```bash
 chmod 777 /var/run/docker.sock
 ```
